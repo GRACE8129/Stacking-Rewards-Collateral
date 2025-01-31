@@ -50,3 +50,48 @@
         loan-id: uint
     }
 )
+;; Variables
+(define-data-var loan-count uint u0)
+(define-data-var min-cycles uint u3)
+(define-data-var collateral-ratio uint u150)
+
+;; Read-only functions
+(define-read-only (get-stacking-info (stacker principal))
+    (map-get? stacking-info stacker)
+)
+
+(define-read-only (get-loan (id uint))
+    (map-get? loans {loan-id: id})
+)
+
+(define-read-only (get-cycle-info (stacker principal) (cycle uint))
+    (map-get? reward-cycles {stacker: stacker, cycle: cycle})
+)
+
+(define-read-only (calculate-rewards (amount uint) (cycles uint))
+    (* amount (* cycles u100))  ;; Example reward calculation
+)
+
+;; Public functions
+(define-public (register-stacking (amount uint) (cycles uint))
+    (let (
+        (rewards-estimate (calculate-rewards amount cycles))
+    )
+        (asserts! (>= cycles (var-get min-cycles)) ERR-INVALID-STACKING)
+        (asserts! (> amount u0) ERR-INVALID-STACKING)
+        (asserts! (is-none (map-get? stacking-info tx-sender)) ERR-ALREADY-EXISTS)
+        
+        (map-set stacking-info
+            tx-sender
+            {
+                amount: amount,
+                cycles: cycles,
+                start-block: block-height,
+                unlock-block: (+ block-height (* cycles u2100)),
+                rewards-per-cycle: (/ rewards-estimate cycles)
+            }
+        )
+        
+        (ok rewards-estimate)
+    )
+)
