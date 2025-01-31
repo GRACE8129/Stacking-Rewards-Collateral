@@ -27,3 +27,26 @@
         rewards-per-cycle: uint
     }
 )
+(define-map loans
+    {loan-id: uint}
+    {
+        borrower: principal,
+        lender: principal,
+        amount: uint,
+        collateral: uint,
+        interest: uint,
+        start-block: uint,
+        end-block: uint,
+        status: uint,
+        repaid: uint
+    }
+)
+
+(define-map reward-cycles
+    {stacker: principal, cycle: uint}
+    {
+        expected: uint,
+        claimed: uint,
+        loan-id: uint
+    }
+)
